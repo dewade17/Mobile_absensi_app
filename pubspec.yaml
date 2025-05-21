@@ -53,6 +53,10 @@ dependencies:
   jwt_decoder: ^2.0.1
   google_maps_flutter: ^2.12.1
   geolocator: ^10.1.0
+  timezone: ^0.10.1
+  intl: ^0.20.2
+  file_picker: ^10.1.9
+  open_file: ^3.5.10
 
 dev_dependencies:
   flutter_test:

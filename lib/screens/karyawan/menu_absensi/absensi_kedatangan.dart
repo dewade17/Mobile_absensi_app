@@ -1,9 +1,10 @@
-// ignore: file_names
+// ignore_for_file: unused_local_variable
+
 import 'package:absensi_app/dto/attendancearrival.dart';
 import 'package:absensi_app/dto/location.dart';
 import 'package:absensi_app/providers/attendance_arrival.dart';
-import 'package:absensi_app/providers/face_verification_provider.dart';
 import 'package:absensi_app/providers/location_provider.dart';
+import 'package:absensi_app/providers/face/verify_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_faceid/verify_face.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';

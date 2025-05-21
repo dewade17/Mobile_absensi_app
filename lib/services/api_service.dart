@@ -1,20 +1,14 @@
-// import 'package:flutter/material.dart';
 // ignore_for_file: avoid_print, unused_local_variable
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:mime/mime.dart';
 import 'dart:convert';
-import 'package:http_parser/http_parser.dart';
-import 'dart:io';
-import 'package:path/path.dart' as path;
 
 class ApiService {
   final String baseUrl =
-      'https://sociology-butts-field-resolved.trycloudflare.com/api'; //api-back-nextjs
-  final String baseurl =
-      'https://engineers-tongue-herald-marine.trycloudflare.com/api'; //api-face-recognition-flask
+      'https://additional-ride-international-grenada.trycloudflare.com/api';
 
   Future<Map<String, dynamic>> fetchData(String endpoint) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -166,44 +160,30 @@ class ApiService {
     }
   }
 
-  Future<Map<String, String>> verifyFace(File imageFile) async {
-    final uri = Uri.parse('$baseUrl/verifyface');
+  Future<Map<String, dynamic>> uploadFile(String endpoint, File file,
+      {Map<String, String>? fields}) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-    final mimeType = lookupMimeType(imageFile.path);
-    final ext = path.extension(imageFile.path).toLowerCase();
+    final url = Uri.parse('$baseUrl/$endpoint');
 
-    // Gunakan 'image/jpeg' kalau tidak bisa terdeteksi
-    final contentType = mimeType != null
-        ? MediaType.parse(mimeType)
-        : MediaType('image', 'jpeg');
+    var request = http.MultipartRequest('POST', url);
+    request.headers['Authorization'] = 'Bearer $token';
+    request.files.add(await http.MultipartFile.fromPath('image', file.path));
 
-    final request = http.MultipartRequest('POST', uri)
-      ..files.add(await http.MultipartFile.fromPath(
-        'image',
-        imageFile.path,
-        contentType: contentType,
-      ));
+    if (fields != null) {
+      request.fields.addAll(fields);
+    }
 
-    try {
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
+    final response = await request.send();
+    final responseStr = await response.stream.bytesToString();
+    final responseData = jsonDecode(responseStr);
 
-      if (response.statusCode == 200) {
-        return {
-          'status': 'success',
-          'message': responseBody.trim(),
-        };
-      } else {
-        return {
-          'status': 'failed',
-          'message': 'Failed with status: ${response.statusCode}'
-        };
-      }
-    } catch (e) {
-      return {
-        'status': 'error',
-        'message': e.toString(),
-      };
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return responseData;
+    } else {
+      throw Exception(
+          'Failed to upload file: ${response.statusCode} - $responseStr');
     }
   }
 }

@@ -2,7 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'package:absensi_app/providers/encodeface_provider.dart';
+import 'package:absensi_app/providers/face/encode_provider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -59,7 +59,7 @@ class _TakeFaceState extends State<TakeFace> {
         _isCameraReady = true;
       });
     } catch (e) {
-      debugPrint('Gagal inisialisasi kamera: $e');
+      debugPrint('❌ Gagal inisialisasi kamera: $e');
     }
   }
 
@@ -81,7 +81,7 @@ class _TakeFaceState extends State<TakeFace> {
           '${(await getTemporaryDirectory()).path}/face.jpg',
         );
 
-        // 🔧 Kompres gambar sebelum dikirim
+        // 🔥 Kompres gambar
         final compressedFile = await _compressImage(savedFile);
 
         setState(() {
@@ -93,11 +93,12 @@ class _TakeFaceState extends State<TakeFace> {
 
         if (userId == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User belum login')),
+            const SnackBar(content: Text('❌ User belum login')),
           );
           return;
         }
 
+        // ✅ Pakai Provider terbaru
         final faceEncoder =
             Provider.of<FaceEncodingProvider>(context, listen: false);
         final success =
@@ -122,6 +123,9 @@ class _TakeFaceState extends State<TakeFace> {
       }
     } catch (e) {
       debugPrint('❌ Error saat deteksi wajah: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error: $e')),
+      );
     } finally {
       _isSaving = false;
     }
@@ -139,7 +143,7 @@ class _TakeFaceState extends State<TakeFace> {
     );
 
     if (compressedFile == null) {
-      throw Exception('Gagal mengompres gambar.');
+      throw Exception('❌ Gagal mengompres gambar.');
     }
 
     return File(compressedFile.path);
@@ -169,7 +173,8 @@ class _TakeFaceState extends State<TakeFace> {
                   icon: const Icon(Icons.camera),
                   label: const Text('Ambil & Simpan Wajah'),
                   style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50)),
+                    minimumSize: const Size.fromHeight(50),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (_capturedImage != null)

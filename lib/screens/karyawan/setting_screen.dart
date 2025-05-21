@@ -106,6 +106,21 @@ class _SettingScreenState extends State<SettingScreen> {
                           ),
                         ),
                       ),
+                      Card(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Face ID"),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                Text("data"),
+                                Text("data"),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),

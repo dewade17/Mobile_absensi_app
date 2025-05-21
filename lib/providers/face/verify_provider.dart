@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:absensi_app/services/api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/api_service.dart';
 
 class FaceVerificationProvider with ChangeNotifier {
   bool _isVerifying = false;
@@ -38,51 +37,35 @@ class FaceVerificationProvider with ChangeNotifier {
         return false;
       }
 
-      // 1. Ambil semua face dari database
       final apiService = ApiService();
+
+      // 🔥 Ambil semua face dari database
       final response = await apiService.fetchData('userface');
       final List<dynamic> dbFaces = response['faces'];
 
-      // 2. Kirim ke Flask endpoint /verify
       print('📸 File size: ${await imageFile.length()} bytes');
       print('📦 db_faces size: ${jsonEncode(dbFaces).length} bytes');
 
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse(
-            'https://nuclear-complaints-ser-spanish.trycloudflare.com/verify'),
+      // 🔥 Upload file dan db_faces ke Next.js /api/verify
+      final verifyResponse = await apiService.uploadFile(
+        'verify',
+        imageFile,
+        fields: {
+          'db_faces': jsonEncode(dbFaces),
+        },
       );
-      request.files
-          .add(await http.MultipartFile.fromPath('image', imageFile.path));
-      request.fields['db_faces'] = jsonEncode(dbFaces);
 
-      var res = await request.send();
-      final resStr = await res.stream.bytesToString();
+      print('📥 Response dari API Verify: $verifyResponse');
 
-      // ✅ Cek error dari server (misalnya: 413 Payload Too Large)
-      if (res.statusCode != 200) {
-        _setStatus('❌ Flask server error: ${res.statusCode}');
+      // ✅ Cek hasil verifikasi
+      if (verifyResponse['status'] == 'error') {
+        _setStatus('❌ Verifikasi gagal: ${verifyResponse['message']}');
         return false;
       }
 
-      // ✅ Amankan dari FormatException
-      Map<String, dynamic> data;
-      try {
-        data = jsonDecode(resStr);
-      } catch (e) {
-        _setStatus('❌ Gagal membaca response JSON dari server.');
-        return false;
-      }
-
-      // ✅ Tangani hasil verifikasi
-      if (data['status'] == 'error') {
-        _setStatus('❌ Verifikasi gagal: ${data['message']}');
-        return false;
-      }
-
-      if (data['match'] == true) {
-        _setStatus('✅ Wajah cocok dengan user ID: ${data["user_id"]}',
-            userId: data["user_id"]);
+      if (verifyResponse['match'] == true) {
+        _setStatus('✅ Wajah cocok dengan user ID: ${verifyResponse["user_id"]}',
+            userId: verifyResponse["user_id"]);
         return true;
       } else {
         _setStatus('❌ Tidak ada wajah yang cocok.');

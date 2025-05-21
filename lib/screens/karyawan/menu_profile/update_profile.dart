@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:absensi_app/utils/colors.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:absensi_app/providers/profile_provider.dart';
 import 'package:flutter/material.dart';
@@ -44,34 +47,65 @@ class _UpdateProfileState extends State<UpdateProfile> {
     super.dispose();
   }
 
+  void _showPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Photo Library'),
+                onTap: () {
+                  _getImage(ImageSource.gallery);
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Camera'),
+                onTap: () {
+                  _getImage(ImageSource.camera);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _getImage(ImageSource source) async {
     final pickedFile = await picker.pickImage(source: source);
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final fileSize = await file.length();
+    if (pickedFile == null) return;
 
-      const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+    final originalFile = File(pickedFile.path);
+    final fileSize = await originalFile.length();
 
-      if (fileSize > maxSize) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('❌ Ukuran foto maksimal 2MB'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return; // Jangan lanjut jika ukuran terlalu besar
-      }
+    Uint8List finalBytes;
 
-      setState(() {
-        galleryFile = file;
-      });
-
-      final bytes = await pickedFile.readAsBytes();
-      final base64Image = "data:image/png;base64,${base64Encode(bytes)}";
-      _fotoProfilController.text = base64Image;
+    if (fileSize > 2 * 1024 * 1024) {
+      // Kompres jika > 2MB
+      finalBytes = await FlutterImageCompress.compressWithFile(
+            originalFile.path,
+            minWidth: 800,
+            minHeight: 800,
+            quality: 70,
+            format: CompressFormat.jpeg,
+          ) ??
+          await originalFile.readAsBytes(); // fallback jika gagal kompres
+    } else {
+      finalBytes = await originalFile.readAsBytes();
     }
+
+    setState(() {
+      galleryFile = originalFile;
+    });
+
+    final base64Image = "data:image/jpeg;base64,${base64Encode(finalBytes)}";
+    _fotoProfilController.text = base64Image;
   }
 
   Future<void> _submitUpdate() async {
@@ -97,71 +131,194 @@ class _UpdateProfileState extends State<UpdateProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Update Profile'),
+        centerTitle: true,
+        title: const Text('Perbarui Profil'),
+        backgroundColor: Colors.blue,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
+      body: Container(
+        color: AppColors.primaryColor,
+        child: SafeArea(
+          child: Stack(
             children: [
-              TextFormField(
-                controller: _namaController,
-                decoration: const InputDecoration(labelText: 'Nama'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Nama wajib diisi' : null,
-              ),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Email wajib diisi' : null,
-              ),
-              TextFormField(
-                controller: _noHpController,
-                decoration: const InputDecoration(labelText: 'No HP'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'No HP wajib diisi' : null,
-              ),
-              TextFormField(
-                controller: _nipController,
-                decoration: const InputDecoration(labelText: 'NIP'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'NIP wajib diisi' : null,
-              ),
-              const SizedBox(height: 16),
-              const Text("Upload Foto Profil"),
-              const SizedBox(height: 8),
-              galleryFile != null
-                  ? Image.file(galleryFile!)
-                  : _fotoProfilController.text.startsWith('data:image/')
-                      ? Image.memory(
-                          base64Decode(
-                            _fotoProfilController.text.split(',').last,
+              // Posisi form putih
+              Positioned(
+                top: 40,
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _formKey,
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          // Foto Profil
+                          Center(
+                            child: Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(100),
+                                  child: Container(
+                                    width: 120,
+                                    height: 120,
+                                    color: Colors.grey[200],
+                                    child: galleryFile != null
+                                        ? Image.file(galleryFile!,
+                                            fit: BoxFit.cover)
+                                        : (_fotoProfilController.text
+                                                .startsWith('data:image/')
+                                            ? Image.memory(
+                                                base64Decode(
+                                                  _fotoProfilController.text
+                                                      .split(',')
+                                                      .last,
+                                                ),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Icon(Icons.person,
+                                                size: 60,
+                                                color: Colors.grey[400])),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => _showPicker(context),
+                                  child: CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Colors.white,
+                                    child: Icon(Icons.camera_alt,
+                                        size: 20, color: Colors.blue),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          height: 150,
-                        )
-                      : const Icon(Icons.image, size: 100, color: Colors.grey),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => _getImage(ImageSource.gallery),
-                    icon: const Icon(Icons.photo),
-                    label: const Text("Galeri"),
+                          SizedBox(height: 32),
+
+                          // Nama
+                          TextFormField(
+                            controller: _namaController,
+                            decoration: InputDecoration(
+                              labelText: 'Nama',
+                              floatingLabelBehavior: FloatingLabelBehavior.auto,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(width: 2, color: Colors.blue),
+                              ),
+                            ),
+                            validator: (value) =>
+                                (value == null || value.isEmpty)
+                                    ? 'Nama wajib diisi'
+                                    : null,
+                          ),
+                          SizedBox(height: 16),
+
+                          // Email
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              floatingLabelBehavior: FloatingLabelBehavior.auto,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(width: 2, color: Colors.blue),
+                              ),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) =>
+                                (value == null || value.isEmpty)
+                                    ? 'Email wajib diisi'
+                                    : null,
+                          ),
+                          SizedBox(height: 16),
+
+                          // No HP
+                          TextFormField(
+                            controller: _noHpController,
+                            decoration: InputDecoration(
+                              labelText: 'No HP',
+                              floatingLabelBehavior: FloatingLabelBehavior.auto,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(width: 2, color: Colors.blue),
+                              ),
+                            ),
+                            keyboardType: TextInputType.phone,
+                            validator: (value) =>
+                                (value == null || value.isEmpty)
+                                    ? 'No HP wajib diisi'
+                                    : null,
+                          ),
+                          SizedBox(height: 16),
+
+                          // NIP
+                          TextFormField(
+                            controller: _nipController,
+                            decoration: InputDecoration(
+                              labelText: 'NIP',
+                              floatingLabelBehavior: FloatingLabelBehavior.auto,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(width: 2, color: Colors.blue),
+                              ),
+                            ),
+                            validator: (value) =>
+                                (value == null || value.isEmpty)
+                                    ? 'NIP wajib diisi'
+                                    : null,
+                          ),
+                          SizedBox(height: 32),
+
+                          // Tombol Simpan
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _submitUpdate,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                padding: EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                'Simpan Perubahan',
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  TextButton.icon(
-                    onPressed: () => _getImage(ImageSource.camera),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text("Kamera"),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _submitUpdate,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                child: const Text('Simpan Perubahan'),
+                ),
               ),
             ],
           ),
