@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:absensi_app/providers/profile_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_faceid/home_face.dart';
 import 'package:absensi_app/screens/karyawan/menu_profile/update_profile.dart';
+import 'package:absensi_app/screens/karyawan/more_setting/menu_emergency/add_absensi_emergency_screen.dart';
+import 'package:absensi_app/screens/karyawan/more_setting/menu_emergency/emergency_screen.dart';
 import 'package:absensi_app/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -121,7 +123,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   children: [
                                     Icon(Icons.phone),
                                     const SizedBox(width: 10),
-                                    Text(user.noHp),
+                                    Text(
+                                      (user.noHp != null &&
+                                              user.noHp.trim().isNotEmpty)
+                                          ? user.noHp
+                                          : "Lengkap nomor telepon Anda",
+                                    ),
                                   ],
                                 ),
                               ),
@@ -133,11 +140,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   children: [
                                     Icon(Icons.badge),
                                     const SizedBox(width: 10),
-                                    Text(user.nip),
+                                    Text(
+                                      (user.nip != null &&
+                                              user.nip.trim().isNotEmpty)
+                                          ? user.nip
+                                          : "Lengkap NIP Anda",
+                                    ),
                                   ],
                                 ),
                               ),
                             ),
+
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Padding(
@@ -183,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => HomeFace(),
+                                    builder: (context) => EmergencyScreen(),
                                   ),
                                 );
                               },
@@ -270,19 +283,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       Positioned(
                         top: 0,
-                        child: isBase64Image
-                            ? CircleAvatar(
-                                radius: 60,
-                                backgroundImage: MemoryImage(base64Decode(
-                                    user.fotoProfil!.split(',').last)),
-                                backgroundColor: Colors.white,
-                              )
-                            : CircleAvatar(
-                                radius: 60,
-                                backgroundImage:
-                                    NetworkImage(user.fotoProfil ?? ''),
-                                backgroundColor: Colors.white,
-                              ),
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.white,
+                          backgroundImage: (user.fotoProfil != null &&
+                                  user.fotoProfil!.isNotEmpty)
+                              ? (isBase64Image
+                                      ? MemoryImage(base64Decode(
+                                          user.fotoProfil!.split(',').last))
+                                      : NetworkImage(user.fotoProfil!))
+                                  as ImageProvider
+                              : null,
+                          child: (user.fotoProfil == null ||
+                                  user.fotoProfil!.isEmpty)
+                              ? const Icon(Icons.person,
+                                  size: 60, color: Colors.grey)
+                              : null,
+                        ),
                       ),
                     ],
                   ),

@@ -205,264 +205,200 @@ class _EditAgendaScreenState extends State<EditAgendaScreen> {
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat('yyyy-MM-dd');
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Agenda'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _deskripsiController,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: 'Deskripsi Pekerjaan',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.description),
+      appBar: AppBar(backgroundColor: AppColors.primaryColor),
+      body: Stack(
+        children: [
+          Container(
+            height: 180,
+            width: double.infinity,
+            color: AppColors.primaryColor,
+            padding: const EdgeInsets.only(top: 30),
+            child: const Center(
+              child: Text(
+                "Edit Agenda Kerja",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Deskripsi tidak boleh kosong'
-                    : null,
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              ListTile(
-                tileColor: Colors.grey[200],
-                title: Text(_tanggal != null
-                    ? formatter.format(_tanggal!)
-                    : 'Pilih Tanggal'),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: _selectDate,
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                tileColor: Colors.grey[200],
-                title: Text(_jamMulai != null
-                    ? 'Jam Mulai: ${_jamMulai!.format(context)}'
-                    : 'Pilih Jam Mulai'),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _selectTime(isStart: true),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                tileColor: Colors.grey[200],
-                title: Text(_jamSelesai != null
-                    ? 'Jam Selesai: ${_jamSelesai!.format(context)}'
-                    : 'Pilih Jam Selesai'),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _selectTime(isStart: false),
-              ),
-              const SizedBox(height: 16),
-              Builder(
-                builder: (context) {
-                  Widget fileInfo;
-
-                  if (galleryFile != null) {
-                    final ext = galleryFile!.path.split('.').last.toLowerCase();
-                    final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
-
-                    fileInfo = Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _getImage(ImageSource.gallery),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isImage ? Icons.image : Icons.picture_as_pdf,
-                                  color: isImage ? Colors.black54 : Colors.red,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    galleryFile!.path.split('/').last,
-                                    style: const TextStyle(
-                                        fontSize: 13, color: Colors.grey),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.edit, size: 18),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        if (isImage)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              galleryFile!,
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 100),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
                       ],
-                    );
-                  } else if (widget.item.buktiFotoUrl != null &&
-                      widget.item.buktiFotoUrl!.isNotEmpty) {
-                    final bukti = widget.item.buktiFotoUrl!;
-
-                    if (bukti.startsWith('data:image/')) {
-                      try {
-                        final imageBytes = base64Decode(bukti.split(',').last);
-                        fileInfo = Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            GestureDetector(
-                              onTap: () => _getImage(ImageSource.gallery),
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: const [
-                                    Icon(Icons.image),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'Gambar lama digunakan, klik untuk mengganti',
-                                        style: TextStyle(
-                                            fontSize: 13, color: Colors.grey),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.edit, size: 18),
-                                  ],
-                                ),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _deskripsiController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              labelText: 'Deskripsi Pekerjaan',
+                              prefixIcon: const Icon(Icons.work),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Deskripsi tidak boleh kosong'
+                                : null,
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            readOnly: true,
+                            onTap: _selectDate,
+                            decoration: InputDecoration(
+                              labelText: 'Tanggal',
+                              prefixIcon: const Icon(Icons.date_range),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _tanggal != null
+                                  ? formatter.format(_tanggal!)
+                                  : '',
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            readOnly: true,
+                            onTap: () => _selectTime(isStart: true),
+                            decoration: InputDecoration(
+                              labelText: 'Jam Mulai',
+                              prefixIcon: const Icon(Icons.access_time),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _jamMulai != null
+                                  ? _jamMulai!.format(context)
+                                  : '',
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            readOnly: true,
+                            onTap: () => _selectTime(isStart: false),
+                            decoration: InputDecoration(
+                              labelText: 'Jam Selesai',
+                              prefixIcon: const Icon(Icons.access_time),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _jamSelesai != null
+                                  ? _jamSelesai!.format(context)
+                                  : '',
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            width: double
+                                .infinity, // agar tombol melebar mengikuti layar
+                            child: OutlinedButton.icon(
+                              onPressed: () => _getImage(ImageSource.gallery),
+                              icon: const Icon(Icons.upload_file),
+                              label: const Text("Upload Bukti Foto"),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(color: AppColors.primaryColor),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (galleryFile != null)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                galleryFile!,
+                                height: 160,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          else if (widget.item.buktiFotoUrl != null &&
+                              widget.item.buktiFotoUrl!
+                                  .startsWith('data:image/'))
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.memory(
-                                imageBytes,
-                                height: 180,
+                                base64Decode(
+                                    widget.item.buktiFotoUrl!.split(',').last),
+                                height: 160,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                               ),
                             ),
-                          ],
-                        );
-                      } catch (e) {
-                        fileInfo = GestureDetector(
-                          onTap: () => _getImage(ImageSource.gallery),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: const [
-                                Icon(Icons.broken_image, color: Colors.grey),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Gagal memuat gambar, klik untuk mengganti',
-                                    style: TextStyle(
-                                        fontSize: 13, color: Colors.red),
+                          const SizedBox(height: 32),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: _isSubmitting ? null : _submitForm,
+                                  icon: _isSubmitting
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
+                                        )
+                                      : const Icon(Icons.save),
+                                  label: Text(
+                                    _isSubmitting
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Perubahan',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryColor,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                 ),
-                                SizedBox(width: 8),
-                                Icon(Icons.edit, size: 18),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                    } else if (bukti.startsWith('data:application/pdf')) {
-                      fileInfo = GestureDetector(
-                        onTap: () => _getImage(ImageSource.gallery),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: const [
-                              Icon(Icons.picture_as_pdf, color: Colors.red),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'PDF lama digunakan, klik untuk mengganti',
-                                  style: TextStyle(
-                                      fontSize: 13, color: Colors.grey),
-                                ),
                               ),
-                              SizedBox(width: 8),
-                              Icon(Icons.edit, size: 18),
                             ],
                           ),
-                        ),
-                      );
-                    } else {
-                      fileInfo = const SizedBox();
-                    }
-                  } else {
-                    // No file at all
-                    fileInfo = GestureDetector(
-                      onTap: () => _getImage(ImageSource.gallery),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.upload),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Klik untuk upload bukti (opsional)',
-                                style:
-                                    TextStyle(fontSize: 13, color: Colors.grey),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Icon(Icons.edit, size: 18),
-                          ],
-                        ),
+                        ],
                       ),
-                    );
-                  }
-
-                  return fileInfo;
-                },
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _isSubmitting ? null : _submitForm,
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save),
-                label:
-                    Text(_isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryColor,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

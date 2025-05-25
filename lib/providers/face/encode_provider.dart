@@ -68,4 +68,26 @@ class FaceEncodingProvider with ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<bool> isFaceRegistered() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+      final userId = prefs.getString('user_id');
+
+      if (token == null || userId == null) return false;
+
+      final apiService = ApiService();
+      final result = await apiService.fetchDataface('userface/$userId');
+
+      if (result != null && result['face_encoding'] != null) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Face not registered or error occurred: $e');
+      return false; // <== fallback aman
+    }
+  }
+
 }

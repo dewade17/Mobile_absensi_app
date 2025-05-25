@@ -239,147 +239,178 @@ class _AddAgendaScreenState extends State<AddAgendaScreen> {
   @override
   Widget build(BuildContext context) {
     final formatter = DateFormat('yyyy-MM-dd');
+
     return Scaffold(
-      backgroundColor: Colors.blue,
-      appBar: AppBar(
-        title: const Text('Agenda Hari Ini'),
-        centerTitle: true,
-        backgroundColor: Colors.lightBlue.shade700,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              Container(
-                decoration: BoxDecoration(
+      appBar: AppBar(backgroundColor: AppColors.primaryColor),
+      body: Stack(
+        children: [
+          Container(
+            height: 180,
+            width: double.infinity,
+            color: AppColors.primaryColor,
+            padding: const EdgeInsets.only(bottom: 100),
+            child: const Center(
+              child: Text(
+                "Form Agenda Kerja",
+                style: TextStyle(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _deskripsiController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          labelText: 'Deskripsi Pekerjaan',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                          prefixIcon: const Icon(Icons.description),
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Deskripsi tidak boleh kosong'
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        tileColor: Colors.grey[100],
-                        title: Text(
-                          _tanggal != null
-                              ? formatter.format(_tanggal!)
-                              : 'Pilih Tanggal',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: _selectDate,
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        tileColor: Colors.grey[100],
-                        title: Text(
-                          _jamMulai != null
-                              ? 'Jam Mulai: ${_jamMulai!.format(context)}'
-                              : 'Pilih Jam Mulai',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        trailing: const Icon(Icons.access_time),
-                        onTap: () => _selectTime(isStart: true),
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        tileColor: Colors.grey[100],
-                        title: Text(
-                          _jamSelesai != null
-                              ? 'Jam Selesai: ${_jamSelesai!.format(context)}'
-                              : 'Pilih Jam Selesai',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        trailing: const Icon(Icons.access_time),
-                        onTap: () => _selectTime(isStart: false),
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        tileColor: Colors.grey[100],
-                        title: const Text("Upload Bukti Foto"),
-                        subtitle: Text(
-                          galleryFile != null
-                              ? galleryFile!.path.split('/').last
-                              : "Belum ada file",
-                          style:
-                              const TextStyle(fontSize: 13, color: Colors.grey),
-                        ),
-                        trailing: const Icon(Icons.upload_file),
-                        onTap: () => _showPicker(context),
-                      ),
-                      if (galleryFile != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              galleryFile!,
-                              height: 160,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+              child: Column(
+                children: [
+                  const SizedBox(height: 50),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextFormField(
+                            controller: _deskripsiController,
+                            maxLines: 3,
+                            decoration: InputDecoration(
+                              labelText: 'Deskripsi Pekerjaan',
+                              alignLabelWithHint: true,
+                              prefixIcon: const Icon(Icons.work),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Deskripsi tidak boleh kosong'
+                                : null,
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            readOnly: true,
+                            onTap: _selectDate,
+                            decoration: InputDecoration(
+                              labelText: 'Tanggal',
+                              prefixIcon: const Icon(Icons.date_range),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _tanggal != null
+                                  ? formatter.format(_tanggal!)
+                                  : '',
                             ),
                           ),
-                        ),
-                    ],
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            readOnly: true,
+                            onTap: () => _selectTime(isStart: true),
+                            decoration: InputDecoration(
+                              labelText: 'Jam Mulai',
+                              prefixIcon: const Icon(Icons.access_time),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _jamMulai != null
+                                  ? _jamMulai!.format(context)
+                                  : '',
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            readOnly: true,
+                            onTap: () => _selectTime(isStart: false),
+                            decoration: InputDecoration(
+                              labelText: 'Jam Selesai',
+                              prefixIcon: const Icon(Icons.access_time),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            controller: TextEditingController(
+                              text: _jamSelesai != null
+                                  ? _jamSelesai!.format(context)
+                                  : '',
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          OutlinedButton.icon(
+                            onPressed: () => _showPicker(context),
+                            icon: const Icon(Icons.upload_file),
+                            label: const Text('Upload Bukti Foto'),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(color: AppColors.primaryColor),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
+                          if (galleryFile != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  galleryFile!,
+                                  height: 160,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 32),
+                          ElevatedButton.icon(
+                            onPressed: _isSubmitting ? null : _submitForm,
+                            icon: _isSubmitting
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.save),
+                            label: Text(
+                              _isSubmitting ? 'Menyimpan...' : 'Simpan Agenda',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 40),
+                ],
               ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: _isSubmitting ? null : _submitForm,
-                  icon: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save),
-                  label: Text(_isSubmitting ? 'Menyimpan...' : 'Simpan Agenda'),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

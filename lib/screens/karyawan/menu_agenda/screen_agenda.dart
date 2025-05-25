@@ -6,6 +6,7 @@ import 'package:absensi_app/dto/work_agenda_item.dart';
 import 'package:absensi_app/providers/agenda_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_agenda/add_agenda_screen.dart';
 import 'package:absensi_app/screens/karyawan/menu_agenda/edit_agenda_screen.dart';
+import 'package:absensi_app/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
@@ -206,8 +207,8 @@ class _ScreenAgendaState extends State<ScreenAgenda> {
       builder: (context) {
         return DraggableScrollableSheet(
           expand: false,
-          initialChildSize: 0.6,
-          minChildSize: 0.3,
+          initialChildSize: 0.65,
+          minChildSize: 0.4,
           maxChildSize: 0.9,
           builder: (context, scrollController) {
             return Padding(
@@ -215,112 +216,180 @@ class _ScreenAgendaState extends State<ScreenAgenda> {
               child: ListView(
                 controller: scrollController,
                 children: [
-                  // Handle drag
                   Center(
                     child: Container(
-                      width: 40,
-                      height: 5,
+                      width: 50,
+                      height: 6,
+                      margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
 
-                  Text(
-                    'Detail Agenda',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: Colors.indigo[700]),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Detail Agenda',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
+                  const Divider(height: 24),
 
+                  // Tanggal
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Tanggal: ',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Icon(Icons.date_range,
+                          size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text(DateFormat('EEEE, dd MMMM yyyy', 'id_ID')
-                            .format(item.tanggal!.toLocal())),
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Tanggal: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(
+                                text: DateFormat('EEEE, dd MMMM yyyy', 'id_ID')
+                                    .format(item.tanggal!.toLocal()),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
 
+                  // Jam Mulai
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Jam Mulai: ',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Icon(Icons.access_time,
+                          size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text(DateFormat('HH:mm', 'id_ID')
-                            .format(item.jamMulai!.toLocal())),
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Jam Mulai: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(
+                                text: DateFormat('HH:mm', 'id_ID')
+                                    .format(item.jamMulai!.toLocal()),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
 
+                  // Jam Selesai
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Jam Selesai: ',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Icon(Icons.access_time_filled,
+                          size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text(DateFormat('HH:mm', 'id_ID')
-                            .format(item.jamSelesai!.toLocal())),
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Jam Selesai: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(
+                                text: DateFormat('HH:mm', 'id_ID')
+                                    .format(item.jamSelesai!.toLocal()),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
 
-                  Row(
+                  // Deskripsi
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Deskripsi Pekerjaan: ',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Expanded(
-                        child: Text(item.deskripsiPekerjaan ?? '-'),
+                      Row(
+                        children: const [
+                          Icon(Icons.notes, size: 20, color: Colors.indigo),
+                          SizedBox(width: 8),
+                          Text(
+                            'Deskripsi Pekerjaan:',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        item.deskripsiPekerjaan ?? '-',
+                        style: const TextStyle(
+                            fontSize: 14, color: Colors.black87),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
 
-                  // Bukti Foto atau PDF
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Bukti Pekerjaan:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 12),
+
                   if (bukti.isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Bukti Foto:',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        if (isBase64Image && imageBytes != null)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.memory(
-                              imageBytes,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
-                                  const Text('Gagal memuat gambar'),
-                            ),
-                          )
-                        else if (isPdf)
-                          ListTile(
-                            leading: const Icon(Icons.picture_as_pdf,
-                                color: Colors.red),
-                            title: const Text('Bukti PDF'),
-                            subtitle: const Text('Klik untuk melihat/unduh'),
-                            onTap: () => openBase64Pdf(bukti),
-                          )
-                        else
-                          const Text('Format bukti tidak dikenali'),
-                      ],
-                    )
+                    if (isBase64Image && imageBytes != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.memory(
+                          imageBytes,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              const Text('Gagal memuat gambar'),
+                        ),
+                      )
+                    else if (isPdf)
+                      Card(
+                        color: Colors.red[50],
+                        child: ListTile(
+                          leading: const Icon(Icons.picture_as_pdf,
+                              color: Colors.red),
+                          title: const Text('Bukti PDF'),
+                          subtitle: const Text('Klik untuk melihat/unduh'),
+                          onTap: () => openBase64Pdf(bukti),
+                        ),
+                      )
+                    else
+                      const Text('Format bukti tidak dikenali')
                   else
                     const Text('Tidak ada bukti yang diunggah'),
 
                   const SizedBox(height: 24),
 
-                  // Tombol Aksi
                   if (isEditable)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -328,15 +397,21 @@ class _ScreenAgendaState extends State<ScreenAgenda> {
                         ElevatedButton.icon(
                           icon: const Icon(Icons.edit),
                           label: const Text("Edit"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                           onPressed: () {
                             Navigator.pop(context);
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EditAgendaScreen(
-                                  agendaId: agendaId, // dari objek agenda
-                                  item:
-                                      item, // WorkagendaItem yang ingin diedit
+                                  agendaId: agendaId,
+                                  item: item,
                                 ),
                               ),
                             );
@@ -347,6 +422,10 @@ class _ScreenAgendaState extends State<ScreenAgenda> {
                           label: const Text("Hapus"),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           onPressed: () async {
                             final provider = Provider.of<WorkAgendaProvider>(

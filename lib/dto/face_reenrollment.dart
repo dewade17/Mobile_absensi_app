@@ -1,23 +1,24 @@
-class Merchant {
+class FaceReenrollment {
   String? requestId;
   String? userId;
   String alasan;
-  String status;
+  String? status;
   String? catatan;
   DateTime? createdAt;
   DateTime? updatedAt;
 
-  Merchant({
+  FaceReenrollment({
     this.requestId,
     this.userId,
     required this.alasan,
-    required this.status,
+    this.status,
     this.catatan,
     this.createdAt,
     this.updatedAt,
   });
 
-  factory Merchant.fromJson(Map<String, dynamic> json) => Merchant(
+  factory FaceReenrollment.fromJson(Map<String, dynamic> json) =>
+      FaceReenrollment(
         requestId: json["request_id"],
         userId: json["user_id"],
         alasan: json["alasan"],

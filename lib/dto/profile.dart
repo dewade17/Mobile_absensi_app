@@ -2,9 +2,9 @@ class Profile {
   String userId;
   String nama;
   String email;
-  dynamic noHp;
-  dynamic nip;
-  dynamic fotoProfil;
+  dynamic? noHp;
+  dynamic? nip;
+  dynamic? fotoProfil;
   DateTime createdAt;
   DateTime updatedAt;
 
@@ -12,9 +12,9 @@ class Profile {
     required this.userId,
     required this.nama,
     required this.email,
-    required this.noHp,
-    required this.nip,
-    required this.fotoProfil,
+    this.noHp,
+    this.nip,
+    this.fotoProfil,
     required this.createdAt,
     required this.updatedAt,
   });

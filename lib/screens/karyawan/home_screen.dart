@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:absensi_app/dto/recap_attendance.dart';
+import 'package:absensi_app/providers/recap_attendance_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_profile/profile_screen.dart';
 import 'package:absensi_app/screens/karyawan/menu_request/screen_request.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -70,24 +72,61 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
   Future<void> fetchAttendanceData({bool refresh = false}) async {
     final profileProvider =
         Provider.of<ProfileProvider>(context, listen: false);
-    final attendanceProvider =
-        Provider.of<AttendanceArrivalProvider>(context, listen: false);
+    final recapProvider =
+        Provider.of<RecapAttendanceProvider>(context, listen: false);
 
     await profileProvider.initUserProfile();
-    await attendanceProvider.fetchPaginatedAttendanceArrivals(refresh: refresh);
+    await recapProvider.fetchRecapAttendance(
+      tanggal: 'default',
+      page: refresh ? 1 : (recapProvider.getMeta('default')?.currentPage ?? 1),
+      limit: recapProvider.getMeta('default')?.perPage ?? 4,
+      refresh: refresh,
+    );
   }
 
   void _scrollListener() {
-    final attendanceProvider =
-        Provider.of<AttendanceArrivalProvider>(context, listen: false);
+    final recapProvider =
+        Provider.of<RecapAttendanceProvider>(context, listen: false);
+    final meta = recapProvider.getMeta('default');
 
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      if (!attendanceProvider.isLoading &&
-          attendanceProvider.attendanceArrivals.isNotEmpty) {
-        attendanceProvider.fetchPaginatedAttendanceArrivals();
+      if (!recapProvider.isLoadingFor('default') &&
+          (meta == null || meta.currentPage < meta.totalPages)) {
+        recapProvider.fetchRecapAttendance(
+          tanggal: 'default',
+          page: (meta?.currentPage ?? 1) + 1,
+          limit: meta?.perPage ?? 4,
+        );
       }
     }
+  }
+
+  List<Map<String, dynamic>> groupAttendanceByDate(
+      List<RecapAttendance> arrivals, List<RecapAttendance> departures) {
+    Map<String, Map<String, dynamic>> grouped = {};
+
+    for (var item in [...arrivals, ...departures]) {
+      if (item.tanggal == null) continue;
+      final key = DateFormat('yyyy-MM-dd').format(item.tanggal!);
+      grouped.putIfAbsent(key, () {
+        return {
+          'tanggal': item.tanggal,
+          'jamMasuk': null,
+          'jamKeluar': null,
+        };
+      });
+      if (item.arrivalId != null && item.jamMasuk != null) {
+        grouped[key]!['jamMasuk'] = item.jamMasuk;
+      }
+      if (item.departureId != null && item.jamKeluar != null) {
+        grouped[key]!['jamKeluar'] = item.jamKeluar;
+      }
+    }
+
+    return grouped.values.toList()
+      ..sort((a, b) =>
+          (b['tanggal'] as DateTime).compareTo(a['tanggal'] as DateTime));
   }
 
   @override
@@ -188,7 +227,8 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                         Expanded(
                                           child: InkWell(
                                             onTap: () {
-                                              // Navigasi ke Absensi Kepulangan
+                                              Navigator.pushNamed(context,
+                                                  '/absensi-kepulangan');
                                             },
                                             child: Center(
                                               child: Column(
@@ -314,6 +354,14 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
             final profileProvider =
                 Provider.of<ProfileProvider>(context, listen: false);
             await profileProvider.initUserProfile();
+            final recapProvider =
+                Provider.of<RecapAttendanceProvider>(context, listen: false);
+            await recapProvider.fetchRecapAttendance(
+              tanggal: 'default',
+              page: 1,
+              limit: recapProvider.getMeta('default')?.perPage ?? 4,
+              refresh: true,
+            );
           },
           child: isComplete
               ? Column(
@@ -323,46 +371,51 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                           const EdgeInsets.only(left: 16, right: 16, top: 16),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Text(
+                        children: [
+                          const Text(
                             "History\nKehadiran",
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                          Text(
-                            "View All",
-                            style: TextStyle(color: Colors.blue),
-                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/data-absensi');
+                            },
+                            child: Text(
+                              "View All",
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                          )
                         ],
                       ),
                     ),
                     const SizedBox(height: 10),
+                    Expanded(child: Consumer<RecapAttendanceProvider>(
+                      builder: (context, recapProvider, child) {
+                        final arrivals = recapProvider.getArrivals('default');
+                        final departures =
+                            recapProvider.getDepartures('default');
 
-                    // Expanded ListView
-                    Expanded(
-                      child: Consumer<AttendanceArrivalProvider>(
-                        builder: (context, attendanceProvider, child) {
-                          if (attendanceProvider.isLoading &&
-                              attendanceProvider.attendanceArrivals.isEmpty) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
-                          return ListView.builder(
+                        final groupedAttendance =
+                            groupAttendanceByDate(arrivals, departures);
+
+                        final isLoading = recapProvider.isLoading;
+
+                        return RefreshIndicator(
+                          onRefresh: () => fetchAttendanceData(refresh: true),
+                          child: ListView.builder(
                             controller: _scrollController,
-                            physics: const AlwaysScrollableScrollPhysics(),
                             itemCount:
-                                attendanceProvider.attendanceArrivals.length +
-                                    (attendanceProvider.isLoading ? 1 : 0),
+                                groupedAttendance.length + (isLoading ? 1 : 0),
                             itemBuilder: (context, index) {
-                              if (index <
-                                  attendanceProvider
-                                      .attendanceArrivals.length) {
-                                final attendance = attendanceProvider
-                                    .attendanceArrivals[index];
-                                final location =
-                                    tz.getLocation('Asia/Singapore');
-                                final jamMasukSingapore = tz.TZDateTime.from(
-                                    attendance.jamMasuk, location);
+                              if (index < groupedAttendance.length) {
+                                final data = groupedAttendance[index];
+                                final tanggal =
+                                    (data['tanggal'] as DateTime?)?.toLocal();
+                                final jamMasuk =
+                                    (data['jamMasuk'] as DateTime?)?.toLocal();
+                                final jamKeluar =
+                                    (data['jamKeluar'] as DateTime?)?.toLocal();
 
                                 return Padding(
                                   padding: const EdgeInsets.all(16.0),
@@ -376,10 +429,12 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                           padding:
                                               const EdgeInsets.only(left: 26),
                                           child: Text(
-                                            '${DateFormat('EEEE', 'id_ID').format(attendance.tanggal)}, '
-                                            '${attendance.tanggal.day} '
-                                            '${DateFormat('MMMM', 'id_ID').format(attendance.tanggal)} '
-                                            '${attendance.tanggal.year}',
+                                            (tanggal != null)
+                                                ? DateFormat(
+                                                        'EEEE, dd MMMM yyyy',
+                                                        'id_ID')
+                                                    .format(tanggal)
+                                                : 'Tanggal tidak tersedia',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
@@ -401,9 +456,12 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    const Text("Start Day"),
+                                                    const Text("Jam Masuk"),
                                                     Text(
-                                                      "${jamMasukSingapore.hour.toString().padLeft(2, '0')}:${jamMasukSingapore.minute.toString().padLeft(2, '0')}",
+                                                      jamMasuk != null
+                                                          ? DateFormat('HH:mm')
+                                                              .format(jamMasuk)
+                                                          : "-",
                                                       style: const TextStyle(
                                                           fontWeight:
                                                               FontWeight.bold),
@@ -422,19 +480,15 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
                                                   children: [
-                                                    const Text("Start Day"),
+                                                    const Text("Jam Pulang"),
                                                     Text(
-                                                      () {
-                                                        final location =
-                                                            tz.getLocation(
-                                                                'Asia/Singapore');
-                                                        final jamMasukSingapore =
-                                                            tz.TZDateTime.from(
-                                                                attendance
-                                                                    .jamMasuk,
-                                                                location);
-                                                        return "${jamMasukSingapore.hour.toString().padLeft(2, '0')}:${jamMasukSingapore.minute.toString().padLeft(2, '0')}";
-                                                      }(),
+                                                      jamKeluar != null
+                                                          ? DateFormat('HH:mm')
+                                                              .format(jamKeluar)
+                                                          : "-",
+                                                      style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold),
                                                     ),
                                                   ],
                                                 ),
@@ -455,20 +509,43 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                 );
                               }
                             },
-                          );
-                        },
-                      ),
-                    ),
+                          ),
+                        );
+                      },
+                    ))
                   ],
                 )
               : ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  children: const [
-                    SizedBox(height: 250),
+                  children: [
+                    // const SizedBox(height: 250),
                     Center(
-                      child: Text(
-                        'Lengkapi data profil Anda terlebih dahulu!',
-                        style: TextStyle(fontSize: 18, color: Colors.red),
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            height: 70,
+                          ),
+                          SizedBox(
+                            width: 200,
+                            height: 200,
+                            child: Opacity(
+                              opacity: 0.5,
+                              child: Image.asset(
+                                'assets/images/Profile-empty.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            'Lengkapi Profil Anda \n Untuk Membuka Fitur Lainnya.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          )
+                        ],
                       ),
                     ),
                   ],

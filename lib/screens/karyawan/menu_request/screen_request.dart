@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:absensi_app/utils/colors.dart';
 import 'package:open_file/open_file.dart';
 import 'package:absensi_app/dto/leaverequest.dart';
 import 'package:absensi_app/providers/provider_leaverequest.dart';
@@ -65,6 +66,7 @@ class _ScreenRequestState extends State<ScreenRequest> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Request'),
+        backgroundColor: AppColors.primaryColor,
       ),
       body: Consumer<LeaveRequestProvider>(
         builder: (context, provider, child) {
@@ -83,97 +85,157 @@ class _ScreenRequestState extends State<ScreenRequest> {
                 child: Column(
                   children: [
                     if (provider.leaveRequests.isEmpty)
-                      const Center(child: Text('Belum ada data izin')),
+                      Center(
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 200,
+                            ),
+                            SizedBox(
+                              width: 200,
+                              height: 200,
+                              child: Opacity(
+                                opacity: 0.5,
+                                child: Image.asset(
+                                  'assets/images/Empty-data.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const Text(
+                              'Saat Ini Kamu Tidak Memiliki Pengajuan.',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
                     ...provider.leaveRequests.map((leave) {
                       final isPending =
                           leave.status == null || leave.status == 'PENDING';
                       return InkWell(
                         onTap: () => _showDetailBottomSheet(context, leave),
                         child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 4,
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                                left: 8, right: 8, bottom: 8),
+                            padding: const EdgeInsets.all(16),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.description,
+                                        color: Colors.blueAccent),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        leave.jenisIzin.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isPending)
+                                      PopupMenuButton<String>(
+                                        icon: const Icon(Icons.more_vert),
+                                        onSelected: (value) {
+                                          if (value == 'edit') {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    EditRequestScreen(
+                                                        leave: leave),
+                                              ),
+                                            );
+                                          } else if (value == 'delete') {
+                                            _confirmDelete(context, leave);
+                                          }
+                                        },
+                                        itemBuilder: (_) => [
+                                          const PopupMenuItem(
+                                            value: 'edit',
+                                            child: ListTile(
+                                              leading: Icon(Icons.edit,
+                                                  color: Colors.blueAccent),
+                                              title: Text('Edit'),
+                                            ),
+                                          ),
+                                          const PopupMenuItem(
+                                            value: 'delete',
+                                            child: ListTile(
+                                              leading: Icon(Icons.delete,
+                                                  color: Colors.redAccent),
+                                              title: Text('Hapus'),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      leave.jenisIzin.toUpperCase(),
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    PopupMenuButton<String>(
-                                      icon: Icon(Icons.more_vert,
-                                          color: Colors.grey[800]),
-                                      onSelected: (value) {
-                                        if (value == 'edit') {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => EditRequestScreen(
-                                                leave: leave,
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left:
+                                              4), // Atur padding kiri untuk semua item
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment
+                                            .start, // Rapi ke kiri
+                                        children: [
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.calendar_today,
+                                                  size: 16, color: Colors.grey),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Mulai: ${leave.tanggalMulai.toLocal().toString().split(' ')[0]}',
+                                                style: const TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.black87),
                                               ),
-                                            ),
-                                          );
-                                        } else if (value == 'delete') {
-                                          _confirmDelete(context, leave);
-                                        }
-                                      },
-                                      itemBuilder: (_) {
-                                        if (isPending) {
-                                          return [
-                                            const PopupMenuItem(
-                                              value: 'edit',
-                                              child: ListTile(
-                                                leading: Icon(Icons.edit),
-                                                title: Text('Edit'),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              const Icon(Icons.calendar_today,
+                                                  size: 16, color: Colors.grey),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Berakhir: ${leave.tanggalSelesai.toLocal().toString().split(' ')[0]}',
+                                                style: const TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.black87),
                                               ),
-                                            ),
-                                            const PopupMenuItem(
-                                              value: 'delete',
-                                              child: ListTile(
-                                                leading: Icon(Icons.delete),
-                                                title: Text('Hapus'),
-                                              ),
-                                            ),
-                                          ];
-                                        } else {
-                                          return [
-                                            PopupMenuItem(
-                                              enabled: false,
-                                              child: Text(
-                                              leave.status ?? 'PENDING',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: (leave.status == null || leave.status == 'PENDING')
-                                                  ? Colors.red
-                                                  : Colors.green,
-                                              ),
-                                              ),
-                                            ),
-                                          ];
-                                        }
-                                      },
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                    children: [
-                                    Text(
-                                      '${leave.tanggalMulai.toLocal().toString().split(' ')[0]} s/d ${leave.tanggalSelesai.toLocal().toString().split(' ')[0]}',
-                                    ),
-                                    Text(
-                                      leave.status ?? 'PENDING',
-                                      style: TextStyle(
-                                      color: (leave.status == null || leave.status == 'PENDING')
-                                        ? Colors.red
-                                        : Colors.green,
+                                            ],
+                                          ),
+                                        ],
                                       ),
+                                    ),
+                                    Chip(
+                                      label: Text(
+                                        leave.status?.toUpperCase() ??
+                                            'PENDING',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      backgroundColor: (leave.status == null ||
+                                              leave.status == 'PENDING')
+                                          ? Colors.orange
+                                          : Colors.green,
                                     ),
                                   ],
                                 ),
@@ -213,9 +275,9 @@ class _ScreenRequestState extends State<ScreenRequest> {
       builder: (context) {
         return DraggableScrollableSheet(
           expand: false,
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.8,
+          initialChildSize: 0.55,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
           builder: (context, scrollController) {
             final bukti = leave.buktiFile ?? '';
             final isBase64Image = bukti.startsWith('data:image');
@@ -237,94 +299,181 @@ class _ScreenRequestState extends State<ScreenRequest> {
                   // Drag handle
                   Center(
                     child: Container(
-                      width: 40,
-                      height: 5,
+                      width: 50,
+                      height: 6,
+                      margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
                         color: Colors.grey[400],
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
 
                   // Title
-                  Text(
-                    'Detail Izin',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  Row(
+                    children: const [
+                      Icon(Icons.description, color: Colors.indigo),
+                      SizedBox(width: 8),
+                      Text(
+                        'Detail Izin',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.indigo,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
+                  const Divider(height: 24),
 
-                  // Inlined detail rows
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Jenis Izin: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(leave.jenisIzin)),
-                      ],
-                    ),
+                  // Detail Row 1
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.assignment,
+                          size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Jenis Izin: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(text: leave.jenisIzin),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Keterangan: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(leave.alasan)),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Tanggal Mulai: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(
-                            child: Text(leave.tanggalMulai
-                                .toLocal()
-                                .toIso8601String()
-                                .split('T')[0])),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Tanggal Selesai: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(
-                            child: Text(leave.tanggalSelesai
-                                .toLocal()
-                                .toIso8601String()
-                                .split('T')[0])),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Status: ',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(leave.status ?? 'Pending')),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
 
-                  // Bukti gambar
+                  // Detail Row 2
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.notes, size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Keterangan: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(text: leave.alasan),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Tanggal Mulai
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.date_range,
+                          size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Tanggal Mulai: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(
+                                  text: leave.tanggalMulai
+                                      .toLocal()
+                                      .toString()
+                                      .split(' ')[0]),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Tanggal Selesai
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.event_available,
+                          size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Tanggal Berakhir: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(
+                                  text: leave.tanggalSelesai
+                                      .toLocal()
+                                      .toString()
+                                      .split(' ')[0]),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Status
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.verified_user,
+                          size: 20, color: Colors.indigo),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black87),
+                            children: [
+                              const TextSpan(
+                                text: 'Status: ',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(text: leave.status ?? 'Pending'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const Divider(height: 32),
+                  const Text(
+                    'Bukti Pengajuan:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Bukti
                   if (bukti.isNotEmpty)
                     if (bukti.startsWith('data:image') && imageBytes != null)
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         child: Image.memory(
                           imageBytes,
                           fit: BoxFit.cover,
@@ -333,13 +482,15 @@ class _ScreenRequestState extends State<ScreenRequest> {
                         ),
                       )
                     else if (bukti.startsWith('data:application/pdf'))
-                      ListTile(
-                        leading:
-                            const Icon(Icons.picture_as_pdf, color: Colors.red),
-                        title: const Text('Bukti PDF'),
-                        subtitle:
-                            const Text('Klik tombol untuk melihat atau unduh'),
-                        onTap: () => openBase64Pdf(bukti),
+                      Card(
+                        color: Colors.red[50],
+                        child: ListTile(
+                          leading: const Icon(Icons.picture_as_pdf,
+                              color: Colors.red),
+                          title: const Text('Bukti PDF'),
+                          subtitle: const Text('Klik untuk melihat atau unduh'),
+                          onTap: () => openBase64Pdf(bukti),
+                        ),
                       )
                     else
                       const Text('Format bukti tidak dikenali')

@@ -7,8 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  final String baseUrl =
-      'https://additional-ride-international-grenada.trycloudflare.com/api';
+  final String baseUrl = 'https://ham-bands-annoying-ka.trycloudflare.com/api';
 
   Future<Map<String, dynamic>> fetchData(String endpoint) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -186,4 +185,45 @@ class ApiService {
           'Failed to upload file: ${response.statusCode} - $responseStr');
     }
   }
+
+  Future<Map<String, dynamic>?> fetchDataface (String endpoint) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('Token not found. Please login again.');
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/$endpoint'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decodedResponse = utf8.decode(response.bodyBytes);
+        final jsonResponse = jsonDecode(decodedResponse);
+        return jsonResponse;
+      } else if (response.statusCode == 401) {
+        await prefs.remove('token');
+        throw Exception('Unauthorized. Please login again.');
+      } else if (response.statusCode == 404) {
+        // Data tidak ditemukan, bukan exception fatal
+        print('🔍 Data tidak ditemukan di endpoint: $endpoint');
+        return null;
+      } else {
+        // Error lain (misalnya 500, 403)
+        print('⚠️ API Error [${response.statusCode}]: ${response.body}');
+        throw Exception('Failed to load data from $endpoint');
+      }
+    } catch (e) {
+      // Catch network errors, parsing errors, dll.
+      print('❌ Exception in fetchData: $e');
+      throw Exception('Failed to connect to server.');
+    }
+  }
+
 }

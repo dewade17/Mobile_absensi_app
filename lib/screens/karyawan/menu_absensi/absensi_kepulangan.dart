@@ -1,26 +1,26 @@
-// ignore_for_file: unused_local_variable
+// ignore_for_file: unused_local_variable, use_build_context_synchronously
 
-import 'package:absensi_app/dto/attendancearrival.dart';
+import 'package:absensi_app/dto/attendace_departure.dart';
 import 'package:absensi_app/dto/location.dart';
-import 'package:absensi_app/providers/attendance_arrival.dart';
+import 'package:absensi_app/providers/attendance_departure_provider.dart';
 import 'package:absensi_app/providers/location_provider.dart';
 import 'package:absensi_app/providers/face/verify_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_faceid/verify_face.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
-class AbsensiKedatangan extends StatefulWidget {
-  const AbsensiKedatangan({super.key});
+class AbsensiKepulangan extends StatefulWidget {
+  const AbsensiKepulangan({super.key});
 
   @override
-  State<AbsensiKedatangan> createState() => _AbsensiKedatanganState();
+  State<AbsensiKepulangan> createState() => _AbsensiKepulanganState();
 }
 
-class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
+class _AbsensiKepulanganState extends State<AbsensiKepulangan> {
   late GoogleMapController mapController;
   LatLng _initialPosition = const LatLng(-8.409518, 115.188919);
   Set<Marker> _markers = {};
@@ -28,18 +28,19 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
   bool _locationLoaded = false;
   Location? _lokasiKantor;
   Position? _currentPosition;
-  bool _hasArrivedToday = false;
+  bool _hasDepartedToday = false;
 
-  @override
+ @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       await _loadLocationAndPosition();
-      if (!mounted) return;
-      await _checkIfAlreadyArrived();
+      if (!mounted) return; // <--- TAMBAH INI!
+      await _checkIfAlreadyDeparted();
     });
   }
+
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -61,9 +62,7 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
   Future<void> _getCurrentLocation() async {
     final permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
-      return;
-    }
+        permission == LocationPermission.deniedForever) return;
 
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -107,92 +106,28 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
     } catch (_) {}
   }
 
-  Future<void> _checkIfAlreadyArrived() async {
+Future<void> _checkIfAlreadyDeparted() async {
     final provider =
-        Provider.of<AttendanceArrivalProvider>(context, listen: false);
-    final todayArrival = await provider.fetchTodayArrival();
+        Provider.of<AttendanceDepartureProvider>(context, listen: false);
+    final todayDeparture = await provider.fetchTodayDeparture();
 
     if (!mounted) return;
 
-    if (todayArrival != null) {
+    if (todayDeparture != null) {
       final now = DateTime.now();
-      final tgl = todayArrival.tanggal.toLocal(); // pastikan ke local time
+      final tgl = todayDeparture.tanggal.toLocal(); // ⬅️ penting
 
       setState(() {
-        _hasArrivedToday = tgl.year == now.year &&
+        _hasDepartedToday = tgl.year == now.year &&
             tgl.month == now.month &&
             tgl.day == now.day;
       });
     } else {
-      setState(() => _hasArrivedToday = false);
+      setState(() => _hasDepartedToday = false);
     }
   }
 
-  Future<void> _handleFaceVerificationAndAbsen() async {
-    // Navigasi ke halaman verifikasi wajah
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const VerifyFace()),
-    );
 
-    if (!mounted) return; // <-- WAJIB setelah await navigasi
-
-    final faceVerifier =
-        Provider.of<FaceVerificationProvider>(context, listen: false);
-
-    if (faceVerifier.isVerified) {
-      // Ambil user ID dari SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      if (!mounted) return;
-
-      final userId = prefs.getString('user_id');
-      if (userId == null || _currentPosition == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal ambil data user/lokasi")),
-        );
-        return;
-      }
-
-      final arrivalProvider =
-          Provider.of<AttendanceArrivalProvider>(context, listen: false);
-      final now = DateTime.now();
-      final attendance = Attendancearrival(
-        arrivalId: '',
-        userId: userId,
-        tanggal: DateTime(now.year, now.month, now.day),
-        jamMasuk: now,
-        latitude: _currentPosition!.latitude,
-        longitude: _currentPosition!.longitude,
-        faceVerified: true,
-        createdAt: now,
-        updatedAt: now,
-      );
-      final success = await arrivalProvider.createAttendanceArrival(attendance);
-      if (!mounted) return;
-
-      if (success) {
-        setState(() => _hasArrivedToday = true);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Absensi berhasil")),
-        );
-        await Future.delayed(const Duration(milliseconds: 300));
-        if (!mounted) return;
-        Navigator.pop(context);
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Gagal menyimpan absensi")),
-        );
-      }
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Wajah tidak cocok")),
-      );
-    }
-  }
 
   Widget _buildStatusCard() {
     final now = DateTime.now();
@@ -230,8 +165,7 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _lokasiKantor?.namaLokasi ??
-                        'Dinas Komunikasi dan Informatika',
+                    _lokasiKantor?.namaLokasi ?? 'Kantor Winni Code',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
                 ],
@@ -242,10 +176,10 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
               children: [
                 const Text('Status:', style: TextStyle(color: Colors.black87)),
                 Text(
-                  _hasArrivedToday ? "Sudah\nabsen" : "Belum\nabsen",
+                  _hasDepartedToday ? "Sudah\nabsen" : "Belum\nabsen",
                   textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: _hasArrivedToday ? Colors.green : Colors.red,
+                    color: _hasDepartedToday ? Colors.green : Colors.red,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -258,12 +192,73 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
     );
   }
 
+  Future<void> _handleFaceVerificationAndAbsenPulang() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const VerifyFace()),
+    );
+
+    if (!mounted) return; // setelah navigasi
+
+    final faceVerifier =
+        Provider.of<FaceVerificationProvider>(context, listen: false);
+
+    if (faceVerifier.isVerified) {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+
+      final userId = prefs.getString('user_id');
+      if (!mounted || userId == null || _currentPosition == null) return;
+
+      final departureProvider =
+          Provider.of<AttendanceDepartureProvider>(context, listen: false);
+      final now = DateTime.now();
+
+      final success = await departureProvider.createDeparture(
+        AttendaceDeparture(
+          departureId: '',
+          userId: userId,
+          tanggal: DateTime(now.year, now.month, now.day),
+          jamKeluar: now,
+          latitude: _currentPosition!.latitude,
+          longitude: _currentPosition!.longitude,
+          faceVerified: true,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+      if (!mounted) return;
+
+      if (success) {
+        setState(() => _hasDepartedToday = true);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ Absen pulang berhasil")),
+        );
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (!mounted) return;
+        Navigator.pop(context);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❌ Gagal menyimpan absen pulang")),
+        );
+      }
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Wajah tidak cocok")),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final lokasiProvider = Provider.of<LocationProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Absensi Kedatangan')),
+      appBar: AppBar(title: const Text('Absensi Kepulangan')),
       body: lokasiProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : _lokasiKantor == null
@@ -285,14 +280,14 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
                           center: LatLng(_lokasiKantor!.latitude,
                               _lokasiKantor!.longitude),
                           radius: _lokasiKantor!.radius.toDouble(),
-                          strokeColor: Colors.blueAccent,
-                          fillColor: Colors.blue.withOpacity(0.1),
+                          strokeColor: Colors.redAccent,
+                          fillColor: Colors.red.withOpacity(0.1),
                           strokeWidth: 2,
                         )
                       },
                     ),
                     Positioned(
-                      top: 16,
+                      top: 40,
                       left: 0,
                       right: 0,
                       child: _buildStatusCard(),
@@ -303,22 +298,21 @@ class _AbsensiKedatanganState extends State<AbsensiKedatangan> {
                         left: 20,
                         right: 20,
                         child: ElevatedButton(
-                          onPressed: (_isInRadius && !_hasArrivedToday)
-                              ? _handleFaceVerificationAndAbsen
+                          onPressed: (_isInRadius && !_hasDepartedToday)
+                              ? _handleFaceVerificationAndAbsenPulang
                               : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isInRadius
-                                ? (_hasArrivedToday
-                                    ? Colors.grey
-                                    : Colors.green)
+                                ? (_hasDepartedToday ? Colors.grey : Colors.red)
                                 : Colors.grey,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 12, horizontal: 12),
                           ),
                           child: Text(
                             _isInRadius
-                                ? (_hasArrivedToday
-                                    ? 'Sudah absen masuk'
-                                    : 'Verifikasi Wajah & Absen Masuk')
+                                ? (_hasDepartedToday
+                                    ? 'Sudah absen pulang'
+                                    : 'Verifikasi Wajah & Absen Pulang')
                                 : 'Di luar radius kantor',
                             style: const TextStyle(fontSize: 16),
                           ),
