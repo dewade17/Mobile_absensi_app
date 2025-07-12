@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, deprecated_member_use
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -251,7 +253,7 @@ class _AddAgendaScreenState extends State<AddAgendaScreen> {
             padding: const EdgeInsets.only(bottom: 100),
             child: const Center(
               child: Text(
-                "Form Agenda Kerja",
+                "Form Agenda Mengajar",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -290,7 +292,7 @@ class _AddAgendaScreenState extends State<AddAgendaScreen> {
                             controller: _deskripsiController,
                             maxLines: 3,
                             decoration: InputDecoration(
-                              labelText: 'Deskripsi Pekerjaan',
+                              labelText: 'Deskripsi Mengajar',
                               alignLabelWithHint: true,
                               prefixIcon: const Icon(Icons.work),
                               border: OutlineInputBorder(

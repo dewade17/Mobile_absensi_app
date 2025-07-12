@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable, use_build_context_synchronously
+// ignore_for_file: unused_local_variable, use_build_context_synchronously, deprecated_member_use
 
 import 'package:absensi_app/dto/attendace_departure.dart';
 import 'package:absensi_app/dto/location.dart';
@@ -6,6 +6,7 @@ import 'package:absensi_app/providers/attendance_departure_provider.dart';
 import 'package:absensi_app/providers/location_provider.dart';
 import 'package:absensi_app/providers/face/verify_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_faceid/verify_face.dart';
+import 'package:absensi_app/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -30,7 +31,7 @@ class _AbsensiKepulanganState extends State<AbsensiKepulangan> {
   Position? _currentPosition;
   bool _hasDepartedToday = false;
 
- @override
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -40,7 +41,6 @@ class _AbsensiKepulanganState extends State<AbsensiKepulangan> {
       await _checkIfAlreadyDeparted();
     });
   }
-
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -62,7 +62,9 @@ class _AbsensiKepulanganState extends State<AbsensiKepulangan> {
   Future<void> _getCurrentLocation() async {
     final permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) return;
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
 
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -106,7 +108,7 @@ class _AbsensiKepulanganState extends State<AbsensiKepulangan> {
     } catch (_) {}
   }
 
-Future<void> _checkIfAlreadyDeparted() async {
+  Future<void> _checkIfAlreadyDeparted() async {
     final provider =
         Provider.of<AttendanceDepartureProvider>(context, listen: false);
     final todayDeparture = await provider.fetchTodayDeparture();
@@ -126,8 +128,6 @@ Future<void> _checkIfAlreadyDeparted() async {
       setState(() => _hasDepartedToday = false);
     }
   }
-
-
 
   Widget _buildStatusCard() {
     final now = DateTime.now();
@@ -252,13 +252,15 @@ Future<void> _checkIfAlreadyDeparted() async {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final lokasiProvider = Provider.of<LocationProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Absensi Kepulangan')),
+      appBar: AppBar(
+        title: const Text('Absensi Kepulangan'),
+        backgroundColor: AppColors.primaryColor,
+      ),
       body: lokasiProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : _lokasiKantor == null

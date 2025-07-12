@@ -1,6 +1,6 @@
 class AttendaceDeparture {
   String? departureId;
-  String? userId;
+  String userId;
   DateTime tanggal;
   DateTime jamKeluar;
   double latitude;
@@ -11,7 +11,7 @@ class AttendaceDeparture {
 
   AttendaceDeparture({
     this.departureId,
-    this.userId,
+    required this.userId,
     required this.tanggal,
     required this.jamKeluar,
     required this.latitude,

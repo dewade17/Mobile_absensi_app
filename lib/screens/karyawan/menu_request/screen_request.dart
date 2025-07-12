@@ -1,6 +1,7 @@
+// ignore_for_file: unnecessary_to_list_in_spreads, avoid_print
+
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 import 'package:absensi_app/utils/colors.dart';
 import 'package:open_file/open_file.dart';
@@ -65,7 +66,8 @@ class _ScreenRequestState extends State<ScreenRequest> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Request'),
+        centerTitle: true,
+        title: const Text('Cuti/Izin/Sakit'),
         backgroundColor: AppColors.primaryColor,
       ),
       body: Consumer<LeaveRequestProvider>(
@@ -259,8 +261,11 @@ class _ScreenRequestState extends State<ScreenRequest> {
             MaterialPageRoute(builder: (_) => const AddRequestScreen()),
           );
         },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
+        backgroundColor: AppColors.primaryColor,
+        child: const Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
       ),
     );
   }
@@ -279,7 +284,7 @@ class _ScreenRequestState extends State<ScreenRequest> {
           minChildSize: 0.4,
           maxChildSize: 0.9,
           builder: (context, scrollController) {
-            final bukti = leave.buktiFile ?? '';
+            final bukti = leave.buktiFile;
             final isBase64Image = bukti.startsWith('data:image');
             Uint8List? imageBytes;
             if (isBase64Image) {

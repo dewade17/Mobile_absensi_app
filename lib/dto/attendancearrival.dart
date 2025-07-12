@@ -42,7 +42,7 @@ class Attendancearrival {
         "latitude": latitude,
         "longitude": longitude,
         "face_verified": faceVerified,
-        "createdlAt": createdAt.toIso8601String(),
+        "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
       };
 }

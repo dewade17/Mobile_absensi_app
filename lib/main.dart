@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:absensi_app/providers/agenda_provider.dart';
 import 'package:absensi_app/providers/attendance_arrival.dart';
 import 'package:absensi_app/providers/attendance_departure_provider.dart';

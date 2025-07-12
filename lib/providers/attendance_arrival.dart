@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, unused_field
 import 'package:absensi_app/dto/attendancearrival.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,7 +7,7 @@ import '../services/api_service.dart';
 class AttendanceArrivalProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
-  List<Attendancearrival> _attendanceArrivals = [];
+  final List<Attendancearrival> _attendanceArrivals = [];
   bool _isLoading = false;
   String? _errorMessage;
   bool _hasMore = true;

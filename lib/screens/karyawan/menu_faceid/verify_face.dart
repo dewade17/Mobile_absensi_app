@@ -1,8 +1,9 @@
-// ignore_for_file: use_build_context_synchronously, avoid_print
+// ignore_for_file: use_build_context_synchronously, avoid_print, unused_field
 
 import 'dart:io';
 import 'dart:async';
 import 'package:absensi_app/providers/face/verify_provider.dart';
+import 'package:absensi_app/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:camera/camera.dart';
@@ -23,10 +24,12 @@ class _VerifyFaceState extends State<VerifyFace> {
   bool _isProcessing = false;
   String? _errorMessage; // Untuk pesan error saat wajah tidak cocok
   File? _imageFile;
+  bool _isScreenActive = true;
 
   @override
   void initState() {
     super.initState();
+    _isScreenActive = true;
     _initializeCamera();
   }
 
@@ -61,11 +64,14 @@ class _VerifyFaceState extends State<VerifyFace> {
     _isProcessing = true;
 
     try {
+      if (!mounted || !_cameraController.value.isInitialized) return;
       final XFile xfile = await _cameraController.takePicture();
+
       File originalFile = File(xfile.path);
 
       File compressedFile = await _compressImage(originalFile);
 
+      if (!mounted) return;
       setState(() {
         _imageFile = compressedFile;
       });
@@ -82,6 +88,7 @@ class _VerifyFaceState extends State<VerifyFace> {
         );
         Navigator.pop(context, true); // Keluar kalau cocok
       } else {
+        if (!mounted) return;
         setState(() {
           _errorMessage = "❌ Wajah tidak cocok, silakan ulangi kembali...";
         });
@@ -91,10 +98,11 @@ class _VerifyFaceState extends State<VerifyFace> {
               content:
                   Text(faceVerifier.statusMessage ?? '❌ Wajah tidak cocok')),
         );
-
         await Future.delayed(const Duration(seconds: 1));
+        if (!mounted || !_isScreenActive) return;
+
         _isProcessing = false;
-        _captureAndVerifyFace(); // Ulangi capture lagi
+        _captureAndVerifyFace(); // hanya lanjut kalau screen masih aktif
       }
     } catch (e) {
       debugPrint('❌ Error mengambil/verifikasi wajah: $e');
@@ -121,6 +129,7 @@ class _VerifyFaceState extends State<VerifyFace> {
 
   @override
   void dispose() {
+    _isScreenActive = false;
     _cameraController.dispose();
     super.dispose();
   }
@@ -132,6 +141,7 @@ class _VerifyFaceState extends State<VerifyFace> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Verifikasi Wajah'),
+        backgroundColor: AppColors.primaryColor,
       ),
       body: _isCameraReady
           ? Center(

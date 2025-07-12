@@ -1,13 +1,13 @@
 // ignore_for_file: avoid_print, unused_local_variable
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  final String baseUrl = 'https://ham-bands-annoying-ka.trycloudflare.com/api';
+  final String baseUrl =
+      'https://parenting-brick-dream-attractive.trycloudflare.com/api';
 
   Future<Map<String, dynamic>> fetchData(String endpoint) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -33,7 +33,6 @@ class ApiService {
       await prefs.remove('token');
       throw Exception('Unauthorized. Please login again.');
     } else {
-      // Cetak detail error ke console untuk debugging
       print("API Error [${response.statusCode}]: ${response.body}");
       throw Exception('Failed to load data from $endpoint');
     }
@@ -68,17 +67,8 @@ class ApiService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
-    final url = Uri.parse('$baseUrl/$endpoint');
-
-    debugPrint("📤 [API PUT] URL: $url");
-    debugPrint("📤 [API PUT] Headers: ${{
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    }}");
-    debugPrint("📤 [API PUT] Body: ${jsonEncode(data)}");
-
     final response = await http.put(
-      url,
+      Uri.parse('$baseUrl/$endpoint'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -86,16 +76,13 @@ class ApiService {
       body: jsonEncode(data),
     );
 
-    debugPrint("✅ [API Response] Status: ${response.statusCode}");
-    debugPrint("✅ [API Response] Body: ${response.body}");
-
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else if (response.statusCode == 401) {
       prefs.remove('token');
       throw Exception('Unauthorized');
     } else {
-      throw Exception('Failed to update data: ${response.body}');
+      throw Exception('Failed to update data');
     }
   }
 
@@ -152,15 +139,18 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final body = json.decode(response.body);
-      return body['user']; // ✅ Ambil hanya bagian user
+      return body['user'];
     } else {
       print('Get user profile failed: ${response.statusCode}');
       return null;
     }
   }
 
-  Future<Map<String, dynamic>> uploadFile(String endpoint, File file,
-      {Map<String, String>? fields}) async {
+  Future<Map<String, dynamic>> uploadFile(
+    String endpoint,
+    File file, {
+    Map<String, String>? fields,
+  }) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -186,7 +176,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>?> fetchDataface (String endpoint) async {
+  Future<Map<String, dynamic>?> fetchDataface(String endpoint) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -211,19 +201,17 @@ class ApiService {
         await prefs.remove('token');
         throw Exception('Unauthorized. Please login again.');
       } else if (response.statusCode == 404) {
-        // Data tidak ditemukan, bukan exception fatal
-        print('🔍 Data tidak ditemukan di endpoint: $endpoint');
+        print('Data tidak ditemukan di endpoint: $endpoint');
         return null;
       } else {
         // Error lain (misalnya 500, 403)
-        print('⚠️ API Error [${response.statusCode}]: ${response.body}');
+        print('API Error [${response.statusCode}]: ${response.body}');
         throw Exception('Failed to load data from $endpoint');
       }
     } catch (e) {
       // Catch network errors, parsing errors, dll.
-      print('❌ Exception in fetchData: $e');
+      print('Exception in fetchData: $e');
       throw Exception('Failed to connect to server.');
     }
   }
-
 }

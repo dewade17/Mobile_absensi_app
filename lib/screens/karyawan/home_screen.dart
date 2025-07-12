@@ -5,12 +5,8 @@ import 'package:absensi_app/dto/recap_attendance.dart';
 import 'package:absensi_app/providers/recap_attendance_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_profile/profile_screen.dart';
 import 'package:absensi_app/screens/karyawan/menu_request/screen_request.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-import 'package:absensi_app/providers/attendance_arrival.dart';
 import 'package:absensi_app/providers/authprovider.dart';
 import 'package:absensi_app/providers/profile_provider.dart';
-import 'package:absensi_app/screens/karyawan/setting_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:absensi_app/utils/colors.dart';
@@ -176,7 +172,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                             ),
                       ),
                       Text(
-                        'I Dewa Gede Arsana PucangAnom, S.Kom',
+                        'I Putu Hendy Pradika, S.Pd',
                         style: TextStyle(
                             fontSize: 17,
                             color: Colors.white,
@@ -184,7 +180,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        '2215091041',
+                        '',
                         style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -262,7 +258,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                                                     color: Colors.blueAccent,
                                                   ),
                                                   Text(
-                                                    'Agenda\nKerja',
+                                                    'Agenda\nMengajar',
                                                     textAlign: TextAlign.center,
                                                   ),
                                                 ],
@@ -351,9 +347,18 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
         ),
         body: RefreshIndicator(
           onRefresh: () async {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            }
+
             final profileProvider =
                 Provider.of<ProfileProvider>(context, listen: false);
             await profileProvider.initUserProfile();
+
             final recapProvider =
                 Provider.of<RecapAttendanceProvider>(context, listen: false);
             await recapProvider.fetchRecapAttendance(
@@ -381,7 +386,7 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                             onTap: () {
                               Navigator.pushNamed(context, '/data-absensi');
                             },
-                            child: Text(
+                            child: const Text(
                               "View All",
                               style: TextStyle(color: Colors.blue),
                             ),
@@ -390,141 +395,188 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Expanded(child: Consumer<RecapAttendanceProvider>(
-                      builder: (context, recapProvider, child) {
-                        final arrivals = recapProvider.getArrivals('default');
-                        final departures =
-                            recapProvider.getDepartures('default');
+                    Expanded(
+                      child: Consumer<RecapAttendanceProvider>(
+                        builder: (context, recapProvider, child) {
+                          final arrivals = recapProvider.getArrivals('default');
+                          final departures =
+                              recapProvider.getDepartures('default');
+                          final groupedAttendance =
+                              groupAttendanceByDate(arrivals, departures);
+                          final isLoading = recapProvider.isLoading;
 
-                        final groupedAttendance =
-                            groupAttendanceByDate(arrivals, departures);
-
-                        final isLoading = recapProvider.isLoading;
-
-                        return RefreshIndicator(
-                          onRefresh: () => fetchAttendanceData(refresh: true),
-                          child: ListView.builder(
-                            controller: _scrollController,
-                            itemCount:
-                                groupedAttendance.length + (isLoading ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              if (index < groupedAttendance.length) {
-                                final data = groupedAttendance[index];
-                                final tanggal =
-                                    (data['tanggal'] as DateTime?)?.toLocal();
-                                final jamMasuk =
-                                    (data['jamMasuk'] as DateTime?)?.toLocal();
-                                final jamKeluar =
-                                    (data['jamKeluar'] as DateTime?)?.toLocal();
-
-                                return Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Card(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const SizedBox(height: 10),
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(left: 26),
-                                          child: Text(
-                                            (tanggal != null)
-                                                ? DateFormat(
-                                                        'EEEE, dd MMMM yyyy',
-                                                        'id_ID')
-                                                    .format(tanggal)
-                                                : 'Tanggal tidak tersedia',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                          return groupedAttendance.isEmpty && !isLoading
+                              ? ListView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  children: [
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 10),
+                                          SizedBox(
+                                            width: 200,
+                                            height: 200,
+                                            child: Opacity(
+                                              opacity: 0.5,
+                                              child: Image.asset(
+                                                'assets/images/Empty-data.png',
+                                                fit: BoxFit.cover,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                const Icon(Icons.location_on,
-                                                    color: Colors.red,
-                                                    size: 30),
-                                                const SizedBox(width: 5),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text("Jam Masuk"),
-                                                    Text(
-                                                      jamMasuk != null
-                                                          ? DateFormat('HH:mm')
-                                                              .format(jamMasuk)
-                                                          : "-",
-                                                      style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
+                                          const Text(
+                                            'Kamu belum melakukan absensi.',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
                                             ),
-                                            Row(
-                                              children: [
-                                                const Icon(Icons.location_on,
-                                                    color: Colors.red,
-                                                    size: 30),
-                                                const SizedBox(width: 5),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    const Text("Jam Pulang"),
-                                                    Text(
-                                                      jamKeluar != null
-                                                          ? DateFormat('HH:mm')
-                                                              .format(jamKeluar)
-                                                          : "-",
-                                                      style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 10),
-                                      ],
+                                            textAlign: TextAlign.center,
+                                          )
+                                        ],
+                                      ),
                                     ),
-                                  ),
+                                  ],
+                                )
+                              : ListView.builder(
+                                  controller: _scrollController,
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  itemCount: groupedAttendance.length +
+                                      (isLoading ? 1 : 0),
+                                  itemBuilder: (context, index) {
+                                    if (index < groupedAttendance.length) {
+                                      final data = groupedAttendance[index];
+                                      final tanggal =
+                                          (data['tanggal'] as DateTime?)
+                                              ?.toLocal();
+                                      final jamMasuk =
+                                          (data['jamMasuk'] as DateTime?)
+                                              ?.toLocal();
+                                      final jamKeluar =
+                                          (data['jamKeluar'] as DateTime?)
+                                              ?.toLocal();
+
+                                      return Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Card(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(height: 10),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 26),
+                                                child: Text(
+                                                  (tanggal != null)
+                                                      ? DateFormat(
+                                                              'EEEE, dd MMMM yyyy',
+                                                              'id_ID')
+                                                          .format(tanggal)
+                                                      : 'Tanggal tidak tersedia',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceEvenly,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      const Icon(
+                                                          Icons.location_on,
+                                                          color: Colors.red,
+                                                          size: 30),
+                                                      const SizedBox(width: 5),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          const Text(
+                                                              "Jam Masuk"),
+                                                          Text(
+                                                            jamMasuk != null
+                                                                ? DateFormat(
+                                                                        'HH:mm')
+                                                                    .format(
+                                                                        jamMasuk)
+                                                                : "-",
+                                                            style: const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      const Icon(
+                                                          Icons.location_on,
+                                                          color: Colors.red,
+                                                          size: 30),
+                                                      const SizedBox(width: 5),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          const Text(
+                                                              "Jam Pulang"),
+                                                          Text(
+                                                            jamKeluar != null
+                                                                ? DateFormat(
+                                                                        'HH:mm')
+                                                                    .format(
+                                                                        jamKeluar)
+                                                                : "-",
+                                                            style: const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      return const Padding(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 20),
+                                        child: Center(
+                                            child: CircularProgressIndicator()),
+                                      );
+                                    }
+                                  },
                                 );
-                              } else {
-                                return const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 20),
-                                  child: Center(
-                                      child: CircularProgressIndicator()),
-                                );
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    ))
+                        },
+                      ),
+                    )
                   ],
                 )
               : ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: [
-                    // const SizedBox(height: 250),
                     Center(
                       child: Column(
                         children: [
-                          const SizedBox(
-                            height: 70,
-                          ),
+                          const SizedBox(height: 70),
                           SizedBox(
                             width: 200,
                             height: 200,
@@ -544,7 +596,24 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
                               color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
-                          )
+                          ),
+                         InkWell(
+                            onTap: () {
+                              final authProvider = Provider.of<AuthProvider>(
+                                  context,
+                                  listen: false);
+                              authProvider.logout(context);
+                            },
+                            child: Center(
+                              child: Column(
+                                children: const [
+                                  Icon(Icons.power_settings_new_sharp,
+                                      size: 30),
+                                  Text('Logout'),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),

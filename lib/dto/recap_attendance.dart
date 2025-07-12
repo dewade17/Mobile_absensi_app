@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 class RecapAttendance {
   // Field untuk kedatangan
   final String? arrivalId;

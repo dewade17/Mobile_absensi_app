@@ -1,4 +1,5 @@
-import 'dart:convert';
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 import 'package:absensi_app/services/api_service.dart';
 import 'package:flutter/material.dart';
@@ -39,20 +40,10 @@ class FaceVerificationProvider with ChangeNotifier {
 
       final apiService = ApiService();
 
-      // 🔥 Ambil semua face dari database
-      final response = await apiService.fetchData('userface');
-      final List<dynamic> dbFaces = response['faces'];
-
-      print('📸 File size: ${await imageFile.length()} bytes');
-      print('📦 db_faces size: ${jsonEncode(dbFaces).length} bytes');
-
-      // 🔥 Upload file dan db_faces ke Next.js /api/verify
+      // ✅ Upload hanya image, tanpa kirim db_faces
       final verifyResponse = await apiService.uploadFile(
-        'verify',
+        'verify', // Pastikan path endpoint sesuai
         imageFile,
-        fields: {
-          'db_faces': jsonEncode(dbFaces),
-        },
       );
 
       print('📥 Response dari API Verify: $verifyResponse');

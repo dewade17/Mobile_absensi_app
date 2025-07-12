@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable, avoid_print
+
 import 'dart:io';
 import 'dart:convert';
 import 'package:absensi_app/services/api_service.dart';
@@ -89,5 +91,4 @@ class FaceEncodingProvider with ChangeNotifier {
       return false; // <== fallback aman
     }
   }
-
 }

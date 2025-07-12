@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:absensi_app/dto/recap_attendance.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';

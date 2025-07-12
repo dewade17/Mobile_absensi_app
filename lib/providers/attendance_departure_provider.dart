@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, unused_field, unnecessary_null_comparison, prefer_is_not_operator
 import 'package:absensi_app/dto/attendace_departure.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,7 +7,7 @@ import '../services/api_service.dart';
 class AttendanceDepartureProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
-  List<AttendaceDeparture> _departures = [];
+  final List<AttendaceDeparture> _departures = [];
   bool _isLoading = false;
   String? _errorMessage;
   bool _hasMore = true;
@@ -77,9 +77,15 @@ class AttendanceDepartureProvider with ChangeNotifier {
       final response =
           await _apiService.fetchData('attendance/departure/$userId');
 
-      if (response['data'] == null) return null;
+      final data = response['data'];
 
-      final latestDeparture = AttendaceDeparture.fromJson(response['data'][0]);
+      // ⛔ Handle jika data kosong karena user belum absen
+      if (data == null || !(data is List) || data.isEmpty) {
+        print('📭 User belum absen pulang hari ini.');
+        return null;
+      }
+
+      final latestDeparture = AttendaceDeparture.fromJson(data[0]);
       return latestDeparture;
     } catch (e) {
       _errorMessage = e.toString();

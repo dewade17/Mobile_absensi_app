@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, avoid_print
+
 import 'dart:convert';
 import 'dart:io'; // Tambahkan untuk File
 import 'package:absensi_app/providers/provider_leaverequest.dart';
@@ -374,7 +376,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                                           EdgeInsets.symmetric(vertical: 16),
                                       child: Text(
                                         'Kirim Permintaan',
-                                        style: TextStyle(fontSize: 16),
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.white),
                                       ),
                                     ),
                                   ),

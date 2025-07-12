@@ -1,3 +1,4 @@
+import 'package:absensi_app/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -95,7 +96,10 @@ class _DataAbsensiScreenState extends State<DataAbsensiScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Data Absensi')),
+      appBar: AppBar(
+        title: const Text('Data Absensi'),
+        backgroundColor: AppColors.primaryColor,
+      ),
       body: Column(
         children: [
           // Filter Bulan & Tahun
@@ -176,9 +180,36 @@ class _DataAbsensiScreenState extends State<DataAbsensiScreen> {
                     if (groupedAttendance.isEmpty) {
                       return ListView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          SizedBox(height: 120),
-                          Center(child: Text('Belum ada data absensi.')),
+                        children: [
+                          Center(
+                            child: Column(
+                              children: [
+                                const SizedBox(
+                                  height: 70,
+                                ),
+                                SizedBox(
+                                  width: 200,
+                                  height: 200,
+                                  child: Opacity(
+                                    opacity: 0.5,
+                                    child: Image.asset(
+                                      'assets/images/Profile-empty.png',
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                const Text(
+                                  'Kamu belum melakukan absensi \n pada bulan ini.',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                )
+                              ],
+                            ),
+                          ),
                         ],
                       );
                     }

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -69,9 +71,9 @@ class _ScreenAgendaState extends State<ScreenAgenda> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Agenda'),
-        centerTitle: true,
-      ),
+          title: const Text('Agenda Mengajar'),
+          centerTitle: true,
+          backgroundColor: AppColors.primaryColor),
       body: Consumer<WorkAgendaProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading && provider.agendas.isEmpty) {
@@ -174,7 +176,8 @@ class _ScreenAgendaState extends State<ScreenAgenda> {
             MaterialPageRoute(builder: (context) => const AddAgendaScreen()),
           );
         },
-        child: const Icon(Icons.add),
+        backgroundColor: AppColors.primaryColor,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:absensi_app/providers/face/encode_provider.dart';
 import 'package:absensi_app/providers/face_reenrollment_provider.dart';
 import 'package:absensi_app/screens/karyawan/menu_faceid/take_face.dart';
@@ -257,13 +259,13 @@ class _HomeFaceState extends State<HomeFace> {
                                               request.status!.toUpperCase(),
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                color:
-                                                    request.status == 'diterima'
-                                                        ? Colors.green
-                                                        : request.status ==
-                                                                'ditolak'
-                                                            ? Colors.red
-                                                            : Colors.orange,
+                                                color: request.status ==
+                                                        'DISETUJUI'
+                                                    ? Colors.green
+                                                    : request.status ==
+                                                            'DITOLAK'
+                                                        ? Colors.red
+                                                        : Colors.orange,
                                               ),
                                             ),
                                           ),
